@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Ball Z Api</title>
+</head>
+<body>
+    <style>
+        :root {
+            --color-primario: #7d59ff;
+            --color-secundario: #3225e4;
+            --color-terceario: #29335C;
+            --color-cuarto: #a866bc;
+            --color-quinto: #9b807b;
+        } 
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background-color: var(--color-primario);
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            margin: 0;
+        }
+        header {
+            padding: 15px;
+            display: flex;
+            justify-content: flex-end;
+            background-color: var(--color-secundario);
+        }
+        .search {
+            background-color: var(--color-primario);
+            border: 2px solid var(--color-terceario);
+            border-radius: 50px;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-size: 15px;
+            padding: 8px 15px;
+            color: var(--color-terceario);
+        }
+        .search::placeholder {
+            color: var(--color-terceario);
+        }
+        .search:focus {
+            outline: none;
+            background-color: var(--color-quinto);
+        }
+        main {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .personaje {
+            width: 400px;
+            margin: 15px;
+            background-color: var(--color-secundario);
+            box-shadow: 0 5px 5px rgb(0, 0, 0);
+            position: relative;
+            overflow: hidden;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .personaje img {
+            width: 80%;
+            height: 200px; /* Adjusted for better visibility */
+            object-fit: contain;
+        }
+        .personaje-info {
+            color: var(--color-terceario);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 15px 15px 15px;
+            letter-spacing: 5px;
+        }
+        .personaje-info h3 {
+            margin-top: 0;
+            color: var(--color-terceario);
+        }
+        .personaje-info h1 {
+            color: var(--color-primario);
+        }
+        .descripcion {
+            background-color: var(--color-quinto);
+            padding: 15px;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            max-height: 100%;
+            transform: translateY(101%);
+            overflow-y: auto;
+            transition: transform 0.3s ease-in;
+        }
+        .personaje:hover .descripcion {
+            transform: translateY(0); 
+        }
+    </style>
+
+    <header>
+        <form id="form">
+            <img src="dragonball.jpg" alt="logo" style="width: 100px;">
+            <input type="text" id="search" class="search" placeholder="Buscar Personaje">
+        </form>
+    </header>
+    <main id="main"></main>
+
+    <script>
+        const API_URL = 'https://dragonball-api.com/api/characters';
+        const main = document.getElementById('main');
+        const form = document.getElementById('form');
+        const search = document.getElementById('search');
+
+        async function getCharacters(url) {
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const characters = data.items || data; // Handle API response structure
+                showCharacters(characters);
+            } catch (error) {
+                console.error('Error fetching characters:', error);
+            }
+        }
+
+        function showCharacters(characters) {
+            main.innerHTML = ''; // Corrected from inner.HTML
+            characters.forEach((char) => { // Corrected from forEarch
+                const { id, name, image, ki, maxKi, description, race } = char;
+                const charElement = document.createElement('div');
+                charElement.classList.add('personaje');
+                charElement.innerHTML = `
+                    <img src="${image}" alt="${name}">
+                    <div class="personaje-info">
+                        <h1>${id}</h1>
+                        <h3>${name}</h3>
+                        <br>
+                        ${race}
+                    </div>
+                    <div class="description">
+                        <h3>Description</h3>
+                        ${description || "Sin descripción disponible"}
+                        <p><strong>Ki:</strong> ${ki}</p>
+                        <p><strong>Max Ki:</strong> ${maxKi}</p> <!-- Corrected from Max Ki -->
+                    </div>`;
+                main.appendChild(charElement);
+            });
+        }
+
+        // Event listener for search
+        form.addEventListener('submit', (e) => { // Corrected from addEvenListener
+            e.preventDefault();
+            const searchTerm = search.value.toLowerCase().trim();
+            if (searchTerm) {
+                // Fetch all characters and filter locally
+                getCharacters(API_URL).then(() => {
+                    const characters = main.querySelectorAll('.personaje');
+                    characters.forEach(char => {
+                        const name = char.querySelector('h3').textContent.toLowerCase();
+                        char.style.display = name.includes(searchTerm) ? 'block' : 'none';
+                    });
+                    search.value = '';
+                });
+            } else {
+                getCharacters(API_URL); // Reload all characters if search is empty
+            }
+        });
+
+        // Initial fetch
+        getCharacters(API_URL);
+    </script>
+</body>
+</html>
